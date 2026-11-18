@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10051f">
+<title>Mural Hyerdev</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090510}
+body{font-family:Arial,Helvetica,sans-serif}
+#screen{position:relative;width:100vw;height:100vh;overflow:hidden;background:
+ radial-gradient(ellipse at 50% 50%,#28103e 0%,#10051f 62%,#070510 100%)}
+#videoScene,#imageScene{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+ opacity:0;visibility:hidden;transition:opacity .8s ease}
+#videoScene.active,#imageScene.active{opacity:1;visibility:visible}
+#videoBackdrop{position:absolute;inset:-5%;width:110%;height:110%;object-fit:cover;
+ filter:blur(34px) brightness(.28) saturate(1.2);transform:scale(1.08)}
+#videoMain{position:relative;z-index:1;width:100%;height:100%;object-fit:contain}
+#imageScene{background:#10051f}
+#imageMain{width:100%;height:100%;object-fit:contain;display:block}
+#shade{position:absolute;inset:0;pointer-events:none;z-index:2;
+ background:linear-gradient(90deg,rgba(10,3,20,.12),transparent 25%,transparent 75%,rgba(10,3,20,.12))}
+@media(prefers-reduced-motion:reduce){#videoScene,#imageScene{transition:none}}
+</style>
+</head>
+<body>
+<main id="screen" aria-label="Mural institucional Hyerdev">
+  <section id="videoScene" class="active" aria-label="Vídeo institucional Hyerdev">
+    <video id="videoBackdrop" muted playsinline preload="auto" aria-hidden="true">
+      <source src="assets/hyerdev-institucional.mp4" type="video/mp4">
+    </video>
+    <video id="videoMain" muted playsinline autoplay preload="auto">
+      <source src="assets/hyerdev-institucional.mp4" type="video/mp4">
+    </video>
+    <div id="shade"></div>
+  </section>
+  <section id="imageScene" aria-label="Imagem da parceria Hyerdev e CBirdex">
+    <img id="imageMain" src="assets/parceria-hyerdev-cbirdex.png" alt="Parceria Hyerdev e CBirdex Express">
+  </section>
+</main>
+<script>
+(() => {
+  const videoScene = document.getElementById('videoScene');
+  const imageScene = document.getElementById('imageScene');
+  const video = document.getElementById('videoMain');
+  const backdrop = document.getElementById('videoBackdrop');
+  const imageDuration = 9000;
+  let imageTimer = null;
+
+  function showVideo(){
+    clearTimeout(imageTimer);
+    imageScene.classList.remove('active');
+    videoScene.classList.add('active');
+    video.currentTime = 0;
+    backdrop.currentTime = 0;
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {
+      // Se o navegador bloquear autoplay, um clique/tecla inicia a reprodução.
+    });
+    backdrop.play().catch(()=>{});
+  }
+
+  function showImage(){
+    video.pause();
+    backdrop.pause();
+    videoScene.classList.remove('active');
+    imageScene.classList.add('active');
+    imageTimer = setTimeout(showVideo, imageDuration);
+  }
+
+  video.addEventListener('ended', showImage);
+  video.addEventListener('error', () => {
+    // Mantém a imagem visível caso o vídeo não possa ser reproduzido.
+    showImage();
+  });
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight' || e.key === ' '){
+      e.preventDefault();
+      showImage();
+    }
+    if(e.key === 'ArrowLeft'){
+      e.preventDefault();
+      showVideo();
+    }
+  });
+
+  // Reinicia se o painel voltar de uma aba suspensa.
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && videoScene.classList.contains('active') && video.paused){
+      video.play().catch(()=>{});
+      backdrop.play().catch(()=>{});
+    }
+  });
+
+  video.play().catch(()=>{});
+  backdrop.play().catch(()=>{});
+})();
+</script>
+</body>
+</html>
